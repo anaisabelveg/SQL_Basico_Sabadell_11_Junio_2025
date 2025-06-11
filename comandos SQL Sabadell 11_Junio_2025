@@ -1,0 +1,74 @@
+--- crear la base de datos ---
+CREATE DATABASE db_empl;
+
+--- posicionar en esa base de datos ---
+USE db_empl;
+
+--- crear la tabla t_offices ---
+crear tabla t_offices con 4 campos:
+	offc_id de tipo entero y obligatorio
+	offc_country texto de 30 caracteres obligatorio
+	offc_description texto de 90 caracteres obligatorio
+	offc_name texto 30 caracteres optativo
+
+CREATE TABLE t_offices(
+	offc_id int NOT NULL,
+	offc_country varchar(30) NOT NULL,
+	offc_description varchar(90) NOT NULL,
+	offc_name varchar(30)
+);
+
+--- eliminar el campo offc_name de la tabla ---
+ALTER TABLE t_offices
+	DROP offc_name;
+
+--- agregar el campo offc_city texto 50 caracteres obligatorio ---
+ALTER TABLE t_offices
+	ADD offc_city varchar(50) NOT NULL;  
+
+--- cambiar el campo offc_description texto de 100 caracteres optativo ---
+ALTER TABLE t_offices  
+	CHANGE offc_description   
+    offc_description varchar(100);
+
+-- no funciona  en sqlite
+--ALTER TABLE t_offices  
+--	CHANGE COLUMN offc_description   
+--    offc_description varchar(100);
+-- como alternativo borro y vuelvo a crear el campo   
+ALTER TABLE t_offices
+	DROP offc_description;
+    
+ALTER TABLE t_offices
+	ADD offc_description varchar(100); 
+
+-- crear el campo despues de otro campo 
+ALTER TABLE t_offices
+	ADD offc_description varchar(100)
+    AFTER offc_country; 
+
+--- insertar registros en la tabla ---
+INSERT INTO t_offices
+	 (offc_id, offc_country, offc_description, offc_city)
+   VALUES
+     (10, 'España', 'Oficina central', 'Madrid');
+    
+-- si relleno todos los campos no es necesario porner el nombre
+INSERT INTO t_offices
+   VALUES
+     (11, 'España', null, 'Barcelona');
+     
+-- inserccion multiple, varios registros a la vez
+INSERT INTO t_offices
+   VALUES
+     (20, 'Chile', 'Oficina principal de Chile', 'Santiago'),
+     (30, 'Argentina', null, 'Buenos aires');
+
+-- comprobar si tenemos los 4 registros
+SELECT * FROM t_offices
+
+
+
+
+
+
