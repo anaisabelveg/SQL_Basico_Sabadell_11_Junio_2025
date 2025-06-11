@@ -65,7 +65,7 @@ INSERT INTO t_offices
      (30, 'Argentina', null, 'Buenos aires');
 
 -- comprobar si tenemos los 4 registros
-SELECT * FROM t_offices
+SELECT * FROM t_offices;
 
 
 
