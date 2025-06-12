@@ -1,3 +1,4 @@
+########################### Dia 11 de Junio ######################
 --- crear la base de datos ---
 CREATE DATABASE db_empl;
 
@@ -67,8 +68,173 @@ INSERT INTO t_offices
 -- comprobar si tenemos los 4 registros
 SELECT * FROM t_offices;
 
+########################### Dia 12 de Junio ######################
+
+-- Consultar todos los registros con todos los campos
+select * from t_offices;
+
+-- Consultar todos los registros con los campos country y city
+select offc_country, offc_city from t_offices;
+
+-- Consultar todos campos de los registros donde city Barcelona
+select * from t_offices WHERE offc_city = 'Barcelona';
+
+-- Consultar todos campos de los registros donde city contenga la letra e
+select * from t_offices WHERE offc_city LIKE '%e%';
+
+-- Consultar donde city comience por la letra B
+select * from t_offices WHERE offc_city LIKE 'B%';
+
+-- Consultar donde city termine por la letra s
+select * from t_offices WHERE offc_city LIKE '%s';
+
+-- Consultar donde city contenga la letra e y country sea España
+select * from t_offices WHERE offc_city LIKE '%e%' AND offc_country = 'España';
+
+-- Consultar donde city contenga la letra e y country sea España y id sea 11
+select * from t_offices WHERE offc_city LIKE '%e%' AND offc_country = 'España' AND offc_id=11;
+
+-- Consultar donde city contenga la letra e y country sea España o que id sea 10
+select * from t_offices WHERE offc_city LIKE '%e%' AND offc_country = 'España' OR offc_id=10;
+
+-- Consultar donde city sea Madrid o Barcelona
+SELECT OFFC_COUNTRY, OFFC_CITY 
+FROM T_OFFICES
+WHERE OFFC_CITY IN ('Madrid', 'Barcelona');
+
+-- Cambiar "Buenos aires" por "Buenos Aires"
+UPDATE t_offices
+	SET offc_city = 'Buenos Aires'
+    WHERE offc_city = 'Buenos aires';
 
 
+-- Crear una tabla con lineas de conocimiento
+CREATE TABLE t_knowledge_lines (
+	knln_id INT NOT NULL,
+    knln_name VARCHAR(45) NOT NULL,
+    PRIMARY KEY (knln_id)
+);
+
+-- Insertamos 3 registros
+INSERT INTO t_knowledge_lines
+	VALUES (10, 'Java');
+INSERT INTO t_knowledge_lines
+	VALUES (20, '.NET');
+INSERT INTO t_knowledge_lines
+	VALUES (30, 'Mainframe');
+
+select * from t_knowledge_lines;
+
+-- Vamos a modificar la tabla t_offices para que el campo offc_id sea PK (primary key)
+ALTER TABLE t_offices
+	ADD primary key (offc_id);
+
+-- Crear la tabla de empleados
+-- en sqlite AUTOINCREMENT
+CREATE TABLE t_employees (
+  empl_id INT NOT NULL AUTO_INCREMENT,   
+  offc_id INT NOT NULL, 
+  knln_id INT,
+  empl_forname VARCHAR(50) NOT NULL,
+  empl_middle_name VARCHAR(50),
+  empl_surname VARCHAR(50) NOT NULL,
+  empl_number INT NOT NULL,
+  empl_hire_date DATETIME NOT NULL,
+  empl_mentor_id INT,
+  PRIMARY KEY (empl_id));
+  
+-- Insertar 3 registros
+INSERT INTO t_employees 
+	(offc_id,knln_id, empl_forname, empl_surname, empl_number,empl_hire_date)
+VALUES
+	(10,10,'Juan','Perez',150,'2005-04-15');
+
+INSERT INTO t_employees 
+	(offc_id,knln_id, empl_forname, empl_surname, empl_number,empl_hire_date,empl_mentor_id)
+VALUES
+	(11,20,'Luis','Gonzalez',160,'2006-05-18', 1);
+    
+INSERT INTO t_employees 
+	(offc_id,empl_forname, empl_surname, empl_number,empl_hire_date)
+VALUES
+	(20,'Pedro','Garcia',180,'2006-05-18');
+    
+-- Version sqlite
+INSERT INTO t_employees 
+	(empl_id,offc_id,knln_id, empl_forname, empl_surname, empl_number,empl_hire_date)
+VALUES
+	(1,10,10,'Juan','Perez',150,'2005-04-15');
+    
+INSERT INTO t_employees 
+	(empl_id,offc_id,knln_id, empl_forname, empl_surname, empl_number,empl_hire_date,empl_mentor_id)
+VALUES
+	(2,11,20,'Luis','Gonzalez',160,'2006-05-18', 1);
+    
+INSERT INTO t_employees 
+	(empl_id,offc_id,empl_forname, empl_surname, empl_number,empl_hire_date)
+VALUES
+	(3,20,'Pedro','Garcia',180,'2006-05-18');
+    
+-- En Oracle SQL developer
+INSERT INTO t_employees 
+	(empl_id,offc_id,knln_id, empl_forname, empl_surname, empl_number,empl_hire_date)
+VALUES
+	(1,10,10,'Juan','Perez',150, TO_DATE('2005-04-15','YYYY-MM-DD'));
+
+-- Crear la tabla de proyectos
+CREATE TABLE t_projects(
+	prjt_id INT NOT NULL,
+    prjt_code VARCHAR(16) NOT NULL,
+    prjt_name VARCHAR(50) NOT NULL,
+    PRIMARY KEY (prjt_id)  -- PK simple, de un solo campo
+);
+
+-- Crear la tabla intermedia para relaccionar proyectos y empleados
+CREATE TABLE t_projects_employees(
+	prjt_id INT NOT NULL,
+    empl_id INT NOT NULL,
+    PRIMARY KEY (prjt_id, empl_id) -- PK Compuesta, consta de mas de un campo
+); 
+
+select * from t_employees;
+
+-- Insertar 2 proyectos en la tabla de proyectos
+INSERT INTO t_projects
+	VALUES (1, 'EXT-001000-01234', 'Gestion de usuarios');
+
+INSERT INTO t_projects
+	VALUES (2, 'INT-001000-03200', 'Cursos de formacion');
+    
+select * from t_projects;
+
+-- Insertar valores en la tabla intermedia
+INSERT INTO t_projects_employees
+	VALUES (1,1); -- en el proyecto 1 trabaja el empleado 1
+INSERT INTO t_projects_employees
+	VALUES (1,2); -- en el proyecto 1 trabaja el empleado 2
+INSERT INTO t_projects_employees
+	VALUES (2,2); -- en el proyecto 2 trabaja el empleado 2
+
+select * from t_projects_employees;
+
+-- Crear la FK en la tabla de empleados relaccionada con la tabla de oficinas
+-- Y ademas creamos un indice sobre el campo offc_id
+ALTER TABLE t_employees
+	ADD INDEX fk_empl_offc (offc_id),
+    ADD CONSTRAINT fk_empl_offc
+		FOREIGN KEY (offc_id)
+        REFERENCES t_offices (offc_id);
+
+-- Crear el indice en Sqlite
+CREATE INDEX fk_empl_offc ON t_employees (offc_id);
 
 
+-- Crear la FK en la tabla de empleados relaccionada con la tabla de lineas de conocimiento
+-- Y ademas creamos un indice sobre el campo knln_id
+
+-- Crear la FK en la tabla intermedia proyectos_empleados relaccionada con la tabla de oficinas
+-- Y ademas creamos un indice sobre el campo offc_id
+
+-- Crear la FK en la tabla intermedia proyectos_empleados relaccionada con la tabla de empleados
+-- Y ademas creamos un indice sobre el campo empl_id
 
