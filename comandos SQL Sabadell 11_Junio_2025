@@ -228,13 +228,142 @@ ALTER TABLE t_employees
 -- Crear el indice en Sqlite
 CREATE INDEX fk_empl_offc ON t_employees (offc_id);
 
+########################### Dia 16 de Junio ######################
 
 -- Crear la FK en la tabla de empleados relaccionada con la tabla de lineas de conocimiento
 -- Y ademas creamos un indice sobre el campo knln_id
+ALTER TABLE t_employees
+	ADD INDEX fk_empl_knln (knln_id),
+    ADD CONSTRAINT fk_empl_knln
+		FOREIGN KEY (knln_id)
+        REFERENCES t_knowledge_lines (knln_id);
 
--- Crear la FK en la tabla intermedia proyectos_empleados relaccionada con la tabla de oficinas
--- Y ademas creamos un indice sobre el campo offc_id
+-- Crear la FK en la tabla intermedia proyectos_empleados relaccionada con la tabla de proyectos
+-- Y ademas creamos un indice sobre el campo prtj_id
+ALTER TABLE t_projects_employees
+	ADD INDEX fk_prem_prjt (prjt_id),
+    ADD CONSTRAINT fk_prem_prjt
+		FOREIGN KEY (prjt_id)
+        REFERENCES t_projects (prjt_id);
 
 -- Crear la FK en la tabla intermedia proyectos_empleados relaccionada con la tabla de empleados
 -- Y ademas creamos un indice sobre el campo empl_id
+ALTER TABLE t_projects_employees
+	ADD INDEX fk_prem_empl (empl_id),
+    ADD CONSTRAINT fk_prem_empl
+		FOREIGN KEY (empl_id)
+        REFERENCES t_employees (empl_id);
+
+
+-- mostrar el forname, surname del empleado, city de oficina y name de la linea de conociemto
+-- de los empleados de España o Chile
+-- y ademas el empleado no tiene mentor
+select e.empl_forname, e.empl_surname, o.offc_city, k.knln_name
+	from t_employees e
+    inner join t_offices  o on e.offc_id = o.offc_id
+    left join t_knowledge_lines k on e.knln_id = k.knln_id
+    where o.offc_country in ('España', 'Chile')
+		and e.empl_mentor_id is null;
+
+-- mostrar de la tabla de proyectos: id y nombre, de la tabla de empleados: forname y surname
+-- filtrar solo por nombre = Juan
+select p.prjt_id, p.prjt_name, e.empl_forname, e.empl_surname
+	from t_projects p
+    inner join t_projects_employees pe on p.prjt_id = pe.prjt_id
+    inner join t_employees e on pe.empl_id = e.empl_id
+    where e.empl_forname = 'Juan';
+
+-- Solo los nombres de los empleados y nombre conocimiento 
+-- tienen asignada una linea de conocimiento    
+select e.empl_forname, k.knln_name
+	from t_employees e
+    inner join t_knowledge_lines k on e.knln_id = k.knln_id;
+
+-- Los nombres de los empleados y nombre conocimiento aunque
+-- no esten asignadas a los empleados
+select e.empl_forname, k.knln_name
+	from t_employees e
+    right outer join t_knowledge_lines k on e.knln_id = k.knln_id;
+
+-- otra forma de hacerlo
+select e.empl_forname, k.knln_name
+	from t_knowledge_lines k 
+    left outer join t_employees e on e.knln_id = k.knln_id;
+
+    
+-- Crear un vista llamada v_projects_employees con los campos:
+--  		codigo y nombre del proyecto 
+-- 			numero, forname y surname de empleado
+create view v_projects_employees
+	(prjt_code, prjt_name, empl_number, empl_forname, empl_surname)
+    as
+		select p.prjt_code, p.prjt_name, e.empl_number, e.empl_forname, e.empl_surname
+        from t_projects p
+        inner join t_projects_employees pe on p.prjt_id = pe.prjt_id
+        inner join t_employees e on pe.empl_id = e.empl_id;
+
+-- si no ha salido bien a la primera se elimina y se vuelve a generar
+drop view v_projects_employees;		
+
+-- Consultar sobre la vista los proyectos cuyo codigo comience por EXT
+select * from v_projects_employees
+	where prjt_code like 'EXT%';
+
+-- Creamos la tabla de documentos
+CREATE TABLE t_documents(
+	docs_id int NOT NULL,
+    empl_id int NOT NULL,
+    docs_name VARCHAR(100) NOT NULL,
+    docs_type VARCHAR(50) NOT NULL,
+    PRIMARY KEY (docs_id)
+);
+
+-- Agregamos el indice y la FK
+ALTER TABLE T_DOCUMENTS
+	ADD INDEX fk_docs_empl (empl_id),
+    ADD CONSTRAINT fk_docs_empl
+		FOREIGN KEY (empl_id) REFERENCES t_employees (empl_id);
+   
+-- Crear una restriccion en el campo docs_type para que solo acepte los valores: pdf, doc, xls     
+ALTER TABLE T_DOCUMENTS
+    ADD CONSTRAINT ct_ck_docs_type
+		CHECK ('docs_type' in  ('pdf', 'doc', 'xls'));
+
+-- insertamos 8 registros     
+INSERT INTO t_documents
+	VALUES
+		(1,1,'Titulo', 'pdf'),
+        (2,1,'Curriculum', 'doc'),
+        (3,1,'Certificado OCP', 'pdf'),
+        (4,1,'Matriz conocimientos', 'xls'),
+        (5,2,'Grado', 'pdf'),
+        (6,2,'Curriculum', 'doc'),
+        (7,2,'Certificado MS', 'pdf'),
+        (8,3,'Titulo', 'pdf');
+
+SELECT CONCAT(e.EMPL_FORNAME, ' ', e.EMPL_SURNAME) FULL_NAME, 
+	COUNT(d.DOCS_ID) NUM_DOCS
+	FROM T_EMPLOYEES e
+    inner join T_DOCUMENTS d
+    ON e.EMPL_ID=d.EMPL_ID
+    GROUP BY FULL_NAME;
+    
+SELECT CONCAT(e.EMPL_FORNAME, ' ', e.EMPL_SURNAME) FULL_NAME, 
+	COUNT(d.DOCS_ID) NUM_DOCS 
+	FROM T_EMPLOYEES e
+    inner join T_DOCUMENTS d
+    ON e.EMPL_ID=d.EMPL_ID
+    GROUP BY FULL_NAME
+    ORDER BY NUM_DOCS ASC;
+	
+SELECT CONCAT(e.EMPL_FORNAME, ' ', e.EMPL_SURNAME) FULL_NAME, 
+	COUNT(d.DOCS_ID) NUM_DOCS 
+	FROM T_EMPLOYEES e
+    inner join T_DOCUMENTS d
+    ON e.EMPL_ID=d.EMPL_ID
+    GROUP BY FULL_NAME
+    ORDER BY NUM_DOCS ASC LIMIT 1,2;  
+
+
+
 
